@@ -72,10 +72,11 @@ export default function App() {
       setIsLoading(true);
       setErrorMsg(null);
       try {
+        const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
         const [manualRes, iaRes, metricsRes] = await Promise.all([
-          fetchAndParseSorfCsv('/data/manual.csv'),
-          fetchAndParseSorfCsv('/data/ia.csv'),
-          fetchAndParseMetrics('/data/metricas.csv'),
+          fetchAndParseSorfCsv(`${baseUrl}/data/manual.csv`),
+          fetchAndParseSorfCsv(`${baseUrl}/data/ia.csv`),
+          fetchAndParseMetrics(`${baseUrl}/data/metricas.csv`),
         ]);
 
         if (manualRes.length === 0 && iaRes.length === 0) {

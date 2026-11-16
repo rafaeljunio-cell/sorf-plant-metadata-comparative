@@ -1,0 +1,9 @@
+artigo,braco,tempo_min,campos_preenchidos,acerto_juiz
+P1,manual,185,52,0.94
+P1,ia,12,50,0.89
+P2,manual,240,54,0.96
+P2,ia,15,48,0.85
+P3,manual,160,51,0.93
+P3,ia,9,47,0.88
+P4,manual,310,55,0.98
+P4,ia,18,52,0.91

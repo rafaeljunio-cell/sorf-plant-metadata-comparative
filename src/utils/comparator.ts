@@ -31,7 +31,7 @@ export function getRecordKey(rec: SorfRecord): string {
   if (rec.original_orf_id && String(rec.original_orf_id).trim() !== '') {
     return `${artigo}_${String(rec.original_orf_id).trim()}`;
   }
-  return `${artigo}_${rec.orf_id || Math.random().toString(36).substring(7)}`;
+  return `${artigo}_${rec.orf_id || rec.original_orf_name || rec.original_sequence || 'sem_id'}`;
 }
 
 export function alignComparisonRecords(

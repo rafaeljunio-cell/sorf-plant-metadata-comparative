@@ -89,3 +89,19 @@ code, pre, .font-mono {
   border-bottom: 1.5px solid #ca8a04 !important;
   box-shadow: inset 0 0 8px rgba(202, 138, 4, 0.4) !important;
 }
+
+/* Animação da barra sutil de espera de 4 segundos no cabeçalho */
+@keyframes tooltip-fill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-tooltip-fill {
+  animation-name: tooltip-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}

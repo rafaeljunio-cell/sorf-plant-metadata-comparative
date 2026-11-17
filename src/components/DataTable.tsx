@@ -13,6 +13,7 @@ import {
   Check,
 } from 'lucide-react';
 import { ColumnSelectorModal } from './ColumnSelectorModal';
+import { ColumnHeaderWithTooltip } from './ColumnHeaderWithTooltip';
 
 interface DataTableProps {
   data: SorfRecord[];
@@ -292,12 +293,15 @@ export const DataTable: React.FC<DataTableProps> = ({
         <table className="w-full text-left border-collapse text-xs">
           <thead className="sticky top-0 z-10 bg-slate-100/95 text-slate-700 border-b border-slate-200 uppercase tracking-wider font-semibold select-none backdrop-blur-xs shadow-xs">
             <tr>
-              <th className="py-2 px-3 w-10 text-center text-slate-400">#</th>
+              <ColumnHeaderWithTooltip column="#" className="py-2 px-3 w-10 text-center text-slate-400">
+                #
+              </ColumnHeaderWithTooltip>
               {visibleColumns.map((col) => {
                 const isSorting = sortColumn === col;
                 return (
-                  <th
+                  <ColumnHeaderWithTooltip
                     key={col}
+                    column={col}
                     onClick={() => handleSort(col)}
                     className="py-2 px-3 cursor-pointer hover:bg-slate-200/80 transition-colors whitespace-nowrap"
                   >
@@ -313,10 +317,12 @@ export const DataTable: React.FC<DataTableProps> = ({
                         <ArrowUpDown className="w-3 h-3 text-slate-400 opacity-60" />
                       )}
                     </div>
-                  </th>
+                  </ColumnHeaderWithTooltip>
                 );
               })}
-              <th className="py-2 px-3 text-center">Ações</th>
+              <ColumnHeaderWithTooltip column="Ações" className="py-2 px-3 text-center">
+                Ações
+              </ColumnHeaderWithTooltip>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

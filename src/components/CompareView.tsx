@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { AlignedComparisonRow } from '../types/sorf';
 import { Search, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { ColumnHeaderWithTooltip } from './ColumnHeaderWithTooltip';
 
 interface CompareViewProps {
   alignedRows: AlignedComparisonRow[];
@@ -226,12 +227,20 @@ export const CompareView: React.FC<CompareViewProps> = ({
             <table className="w-full text-left border-collapse text-xs">
               <thead className="sticky top-0 z-10 bg-slate-100/95 text-slate-700 border-b border-slate-200 uppercase tracking-wider font-semibold select-none backdrop-blur-xs shadow-xs">
                 <tr>
-                  <th className="py-2 px-2.5 w-8 text-center text-slate-400">#</th>
-                  <th className="py-2 px-2.5 whitespace-nowrap">Status</th>
+                  <ColumnHeaderWithTooltip column="#" className="py-2 px-2.5 w-8 text-center text-slate-400">
+                    #
+                  </ColumnHeaderWithTooltip>
+                  <ColumnHeaderWithTooltip column="Status" className="py-2 px-2.5 whitespace-nowrap">
+                    Status
+                  </ColumnHeaderWithTooltip>
                   {compareColumns.map((col) => (
-                    <th key={col} className="py-2 px-2.5 whitespace-nowrap">{col}</th>
+                    <ColumnHeaderWithTooltip key={col} column={col} className="py-2 px-2.5 whitespace-nowrap">
+                      {col}
+                    </ColumnHeaderWithTooltip>
                   ))}
-                  <th className="py-2 px-2.5 text-center">Ação</th>
+                  <ColumnHeaderWithTooltip column="Ação" className="py-2 px-2.5 text-center">
+                    Ação
+                  </ColumnHeaderWithTooltip>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -335,12 +344,20 @@ export const CompareView: React.FC<CompareViewProps> = ({
             <table className="w-full text-left border-collapse text-xs">
               <thead className="sticky top-0 z-10 bg-slate-100/95 text-slate-700 border-b border-slate-200 uppercase tracking-wider font-semibold select-none backdrop-blur-xs shadow-xs">
                 <tr>
-                  <th className="py-2 px-2.5 w-8 text-center text-slate-400">#</th>
-                  <th className="py-2 px-2.5 whitespace-nowrap">Status</th>
+                  <ColumnHeaderWithTooltip column="#" className="py-2 px-2.5 w-8 text-center text-slate-400">
+                    #
+                  </ColumnHeaderWithTooltip>
+                  <ColumnHeaderWithTooltip column="Status" className="py-2 px-2.5 whitespace-nowrap">
+                    Status
+                  </ColumnHeaderWithTooltip>
                   {compareColumns.map((col) => (
-                    <th key={col} className="py-2 px-2.5 whitespace-nowrap">{col}</th>
+                    <ColumnHeaderWithTooltip key={col} column={col} className="py-2 px-2.5 whitespace-nowrap">
+                      {col}
+                    </ColumnHeaderWithTooltip>
                   ))}
-                  <th className="py-2 px-2.5 text-center">Ação</th>
+                  <ColumnHeaderWithTooltip column="Ação" className="py-2 px-2.5 text-center">
+                    Ação
+                  </ColumnHeaderWithTooltip>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

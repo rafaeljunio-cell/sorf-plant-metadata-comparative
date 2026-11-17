@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </h1>
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5 leading-none">
-                Portal comparativo de anotação de pequenos ORFs em plantas · Inspirado no PsORF Database
+                Portal comparativo de anotação de pequenos ORFs em plantas
               </p>
             </div>
           </div>

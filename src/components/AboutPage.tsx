@@ -53,8 +53,7 @@ export const AboutPage: React.FC = () => {
           Este portal foi desenvolvido como ferramenta analítica e visual para comparar rigorosamente
           a extração de metadados biológicos de pequenos quadros de leitura aberta (sORFs) realizada por
           especialistas humanos (anotação manual) contra pipelines automatizados baseados em modelos de linguagem
-          e Inteligência Artificial (LLMs). O projeto adota como referência taxonômica e conceitual os padrões do
-          <strong> PsORF Database</strong>.
+          e Inteligência Artificial (LLMs).
         </p>
       </div>
 

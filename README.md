@@ -1,6 +1,6 @@
 # sORF Plant Metadata: Manual vs IA
 
-> **Portal comparativo e analítico para validação de anotação de pequenos quadros de leitura aberta (sORFs) em plantas: Curadoria Manual vs Extração por Inteligência Artificial.** Inspirado nos padrões estruturais e taxonômicos do **PsORF Database**.
+> **Portal comparativo e analítico para validação de anotação de pequenos quadros de leitura aberta (sORFs) em plantas: Curadoria Manual vs Extração por Inteligência Artificial.**
 
 ---
 
@@ -12,7 +12,7 @@ Este projeto fornece uma plataforma web 100% estática, de alta performance e vi
 
 1. **Ingestão Estática Client-Side:** Leitura rápida de arquivos CSV com mais de 55 atributos biológicos via PapaParse, sem necessidade de servidores de backend ou bancos de dados.
 2. **Pareamento Determinístico por Chave Genômica:** Alinhamento rigoroso entre a anotação manual e a extração por IA baseado na tupla `artigo + Chr + Start + End + Strand`.
-3. **Tabela Interativa PsORF:** Paginação (50 linhas/página), busca livre, filtros por publicação, tipo de sORF e evidência, com seletor dinâmico para todas as 55 colunas da `tabela_completa`.
+3. **Tabela Interativa:** Paginação (50 linhas/página), busca livre, filtros por publicação, tipo de sORF e evidência, com seletor dinâmico para todas as 55 colunas da `tabela_completa`.
 4. **Modo Comparar com Rolagem Sincronizada:** Tela dividida (Manual à esquerda em azul, IA à direita em laranja) com destaque visual em vermelho claro nas células divergentes e filtro exclusivo de divergências.
 5. **Dossiê Molecular do sORF:** Modal aprofundado com seções de identificação, coordenadas, sequências completas (nt e aa monoespaçadas com cópia em um clique), anotação gênica, evidências Ribo-seq/espectrometria de massas e links para DOIs.
 6. **Painel Analítico de Concordância:** Gráficos dinâmicos com Recharts exibindo porcentagem de concordância por campo (ordenados do menor para o maior acordo), distribuição por artigo e benchmarks de tempo e acurácia.
@@ -33,7 +33,7 @@ sorf-plant-metadata-comparative/
 ├── src/
 │   ├── components/
 │   │   ├── Header.tsx        # Cabeçalho científico com interruptor triplo (Manual | IA | Comparar)
-│   │   ├── DataTable.tsx     # Tabela de dados padrão PsORF
+│   │   ├── DataTable.tsx     # Tabela interativa de dados
 │   │   ├── CompareView.tsx   # Visão lado a lado com rolagem sincronizada e diffs
 │   │   ├── DetailModal.tsx   # Modal detalhado de inspeção do sORF
 │   │   ├── ColumnSelectorModal.tsx # Gerenciador de visibilidade das 55 colunas

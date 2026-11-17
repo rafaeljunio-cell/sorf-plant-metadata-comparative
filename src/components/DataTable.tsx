@@ -336,7 +336,9 @@ export const DataTable: React.FC<DataTableProps> = ({
                   <tr
                     key={row.chave || idx}
                     onClick={() => onSelectRecord(row)}
-                    className="hover:bg-slate-50/90 cursor-pointer transition-colors group"
+                    className={`cursor-pointer transition-all duration-150 ${
+                      sourceColor === 'blue' ? 'row-hover-blue' : 'row-hover-orange'
+                    } text-slate-800`}
                   >
                     <td className="py-1.5 px-3 text-center text-slate-400 text-[10px] font-mono">
                       {rowNum}

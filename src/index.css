@@ -18,3 +18,74 @@ body {
 code, pre, .font-mono {
   font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+
+
+/* Efeito de iluminação suave ('luz acesa') no hover das linhas */
+.row-light-blue td,
+.row-hover-blue:hover td {
+  background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 50%, #e0f2fe 100%) !important;
+  border-top: 1.5px solid #0284c7 !important;
+  border-bottom: 1.5px solid #0284c7 !important;
+  color: #0369a1 !important;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(14, 165, 233, 0.25) !important;
+}
+
+.row-light-blue td:first-child,
+.row-hover-blue:hover td:first-child {
+  border-left: 4px solid #0284c7 !important;
+  box-shadow: inset 4px 0 6px -2px rgba(2, 132, 199, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.9) !important;
+}
+
+.row-light-blue td:last-child,
+.row-hover-blue:hover td:last-child {
+  border-right: 4px solid #0284c7 !important;
+  box-shadow: inset -4px 0 6px -2px rgba(2, 132, 199, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.9) !important;
+}
+
+.row-light-orange td,
+.row-hover-orange:hover td {
+  background: linear-gradient(180deg, #ffedd5 0%, #fed7aa 50%, #ffedd5 100%) !important;
+  border-top: 1.5px solid #ea580c !important;
+  border-bottom: 1.5px solid #ea580c !important;
+  color: #9a3412 !important;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(234, 88, 12, 0.25) !important;
+}
+
+.row-light-orange td:first-child,
+.row-hover-orange:hover td:first-child {
+  border-left: 4px solid #ea580c !important;
+  box-shadow: inset 4px 0 6px -2px rgba(234, 88, 12, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.9) !important;
+}
+
+.row-light-orange td:last-child,
+.row-hover-orange:hover td:last-child {
+  border-right: 4px solid #ea580c !important;
+  box-shadow: inset -4px 0 6px -2px rgba(234, 88, 12, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Linha ausente com iluminação neutra */
+.row-light-missing td {
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%) !important;
+  border-top: 1.5px dashed #94a3b8 !important;
+  border-bottom: 1.5px dashed #94a3b8 !important;
+  color: #64748b !important;
+}
+
+.row-light-missing td:first-child {
+  border-left: 4px dashed #94a3b8 !important;
+}
+
+.row-light-missing td:last-child {
+  border-right: 4px dashed #94a3b8 !important;
+}
+
+/* Célula de divergência destacada de forma ainda mais brilhante quando a linha está acesa */
+.row-light-blue td.cell-diff-active,
+.row-light-orange td.cell-diff-active {
+  background: linear-gradient(180deg, #fef08a 0%, #fde047 50%, #fef08a 100%) !important;
+  color: #713f12 !important;
+  font-weight: 700 !important;
+  border-top: 1.5px solid #ca8a04 !important;
+  border-bottom: 1.5px solid #ca8a04 !important;
+  box-shadow: inset 0 0 8px rgba(202, 138, 4, 0.4) !important;
+}

@@ -18,6 +18,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedArticle, setSelectedArticle] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -245,15 +246,19 @@ export const CompareView: React.FC<CompareViewProps> = ({
                     const rowNum = (currentPage - 1) * pageSize + idx + 1;
                     const rec = row.manualRecord;
                     const isMissing = !rec;
+                    const rowKey = row.chave || `row-${idx}`;
+                    const isHovered = hoveredKey === rowKey;
 
                     return (
                       <tr
-                        key={row.chave || idx}
+                        key={rowKey}
                         onClick={() => onSelectComparison(row)}
-                        className={`cursor-pointer transition-colors ${
-                          isMissing
-                            ? 'bg-slate-100/50 text-slate-400 italic'
-                            : 'hover:bg-blue-50/50 text-slate-800'
+                        onMouseEnter={() => setHoveredKey(rowKey)}
+                        onMouseLeave={() => setHoveredKey(null)}
+                        className={`cursor-pointer transition-all duration-150 ${
+                          isHovered
+                            ? (isMissing ? 'row-light-missing' : 'row-light-blue')
+                            : (isMissing ? 'bg-slate-100/50 text-slate-400 italic' : 'text-slate-800')
                         }`}
                       >
                         <td className="py-1.5 px-2.5 text-center text-slate-400 text-[10px] font-mono">
@@ -282,8 +287,8 @@ export const CompareView: React.FC<CompareViewProps> = ({
                           return (
                             <td
                               key={col}
-                              className={`py-1.5 px-2.5 whitespace-nowrap max-w-xs truncate ${
-                                isDiff ? 'bg-amber-100/70 text-amber-950 font-semibold' : ''
+                              className={`py-1.5 px-2.5 whitespace-nowrap max-w-xs truncate transition-colors ${
+                                isDiff ? (isHovered ? 'cell-diff-active' : 'bg-amber-100/70 text-amber-950 font-semibold') : ''
                               }`}
                               title={String(val ?? '')}
                             >
@@ -350,15 +355,19 @@ export const CompareView: React.FC<CompareViewProps> = ({
                     const rowNum = (currentPage - 1) * pageSize + idx + 1;
                     const rec = row.iaRecord;
                     const isMissing = !rec;
+                    const rowKey = row.chave || `row-${idx}`;
+                    const isHovered = hoveredKey === rowKey;
 
                     return (
                       <tr
-                        key={row.chave || idx}
+                        key={rowKey}
                         onClick={() => onSelectComparison(row)}
-                        className={`cursor-pointer transition-colors ${
-                          isMissing
-                            ? 'bg-slate-100/50 text-slate-400 italic'
-                            : 'hover:bg-orange-50/50 text-slate-800'
+                        onMouseEnter={() => setHoveredKey(rowKey)}
+                        onMouseLeave={() => setHoveredKey(null)}
+                        className={`cursor-pointer transition-all duration-150 ${
+                          isHovered
+                            ? (isMissing ? 'row-light-missing' : 'row-light-orange')
+                            : (isMissing ? 'bg-slate-100/50 text-slate-400 italic' : 'text-slate-800')
                         }`}
                       >
                         <td className="py-1.5 px-2.5 text-center text-slate-400 text-[10px] font-mono">
@@ -387,8 +396,8 @@ export const CompareView: React.FC<CompareViewProps> = ({
                           return (
                             <td
                               key={col}
-                              className={`py-1.5 px-2.5 whitespace-nowrap max-w-xs truncate ${
-                                isDiff ? 'bg-amber-100/70 text-amber-950 font-semibold' : ''
+                              className={`py-1.5 px-2.5 whitespace-nowrap max-w-xs truncate transition-colors ${
+                                isDiff ? (isHovered ? 'cell-diff-active' : 'bg-amber-100/70 text-amber-950 font-semibold') : ''
                               }`}
                               title={String(val ?? '')}
                             >

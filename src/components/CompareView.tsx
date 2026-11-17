@@ -21,7 +21,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 40;
+  const [pageSize, setPageSize] = useState(25);
 
   // Sincronização de rolagem
   const manualTableRef = useRef<HTMLDivElement>(null);
@@ -44,21 +44,40 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
   // Filtros
   const filteredRows = useMemo(() => {
+    const rawQuery = searchTerm.trim().toLowerCase();
+    const cleanQuery = rawQuery.replace(/[-_.\s]/g, '');
+
     return alignedRows.filter((row) => {
       if (onlyDifferences && !row.hasDivergence) return false;
       if (selectedArticle !== 'ALL' && row.artigo !== selectedArticle) return false;
       if (statusFilter !== 'ALL' && row.status !== statusFilter) return false;
 
-      if (searchTerm.trim() !== '') {
-        const q = searchTerm.toLowerCase();
-        const matchesKey = row.chave.toLowerCase().includes(q);
-        const matchesId =
-          row.manualRecord?.original_orf_id?.toLowerCase().includes(q) ||
-          row.iaRecord?.original_orf_id?.toLowerCase().includes(q);
-        const matchesGene =
-          row.manualRecord?.gene_id?.toLowerCase().includes(q) ||
-          row.iaRecord?.gene_id?.toLowerCase().includes(q);
-        if (!matchesKey && !matchesId && !matchesGene) return false;
+      if (rawQuery !== '') {
+        // Busca na Chave
+        if (row.chave.toLowerCase().includes(rawQuery)) return true;
+        if (cleanQuery && row.chave.toLowerCase().replace(/[-_.\s]/g, '').includes(cleanQuery)) return true;
+
+        // Busca nos campos do Manual
+        if (row.manualRecord) {
+          for (const val of Object.values(row.manualRecord)) {
+            if (val == null) continue;
+            const str = String(val).toLowerCase();
+            if (str.includes(rawQuery)) return true;
+            if (cleanQuery && str.replace(/[-_.\s]/g, '').includes(cleanQuery)) return true;
+          }
+        }
+
+        // Busca nos campos da IA
+        if (row.iaRecord) {
+          for (const val of Object.values(row.iaRecord)) {
+            if (val == null) continue;
+            const str = String(val).toLowerCase();
+            if (str.includes(rawQuery)) return true;
+            if (cleanQuery && str.replace(/[-_.\s]/g, '').includes(cleanQuery)) return true;
+          }
+        }
+
+        return false;
       }
       return true;
     });
@@ -76,15 +95,15 @@ export const CompareView: React.FC<CompareViewProps> = ({
   const totalDivergent = alignedRows.filter((r) => r.hasDivergence).length;
 
   return (
-    <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden flex flex-col">
+    <div className="h-full min-h-0 bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden flex flex-col">
       
-      {/* Barra de Controles do Modo Comparar (Prompt 5) */}
-      <div className="p-4 border-b border-slate-200 bg-slate-50/80 space-y-3">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      {/* Barra de Controles Compacta do Modo Comparar */}
+      <div className="px-3 py-2 border-b border-slate-200 bg-slate-50/80 space-y-1.5 shrink-0">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
           
           {/* Busca */}
           <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2 text-slate-400" />
             <input
               type="text"
               value={searchTerm}
@@ -92,16 +111,27 @@ export const CompareView: React.FC<CompareViewProps> = ({
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Buscar chave de pareamento, ID, gene..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+              placeholder="Buscar por tipo, ID, gene, chave..."
+              className="w-full pl-8 pr-3 py-1 text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
             />
+            {searchTerm && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setCurrentPage(1);
+                }}
+                className="absolute right-2.5 top-1.5 text-xs text-slate-400 hover:text-slate-600"
+              >
+                ×
+              </button>
+            )}
           </div>
 
           {/* Filtros e Toggle "Mostrar só divergências" */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             
             {/* Toggle de Divergências */}
-            <label className="flex items-center gap-2 cursor-pointer bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-800 shadow-xs hover:bg-red-100 transition">
+            <label className="flex items-center gap-1.5 cursor-pointer bg-red-50 border border-red-200 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-800 shadow-xs hover:bg-red-100 transition">
               <input
                 type="checkbox"
                 checked={onlyDifferences}
@@ -109,60 +139,63 @@ export const CompareView: React.FC<CompareViewProps> = ({
                   setOnlyDifferences(e.target.checked);
                   setCurrentPage(1);
                 }}
-                className="w-4 h-4 text-red-600 rounded border-red-300 focus:ring-red-500 cursor-pointer"
+                className="w-3.5 h-3.5 text-red-600 rounded border-red-300 focus:ring-red-500 cursor-pointer"
               />
-              <span>Mostrar só divergências</span>
+              <span>Só divergências</span>
               <span className="bg-red-200 text-red-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
                 {totalDivergent}
               </span>
             </label>
 
             {/* Artigo */}
-            <select
-              value={selectedArticle}
-              onChange={(e) => {
-                setSelectedArticle(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-700 font-medium focus:ring-2 focus:ring-emerald-500 shadow-xs"
-            >
-              <option value="ALL">Todos os Artigos</option>
-              <option value="P1">Artigo P1</option>
-              <option value="P2">Artigo P2</option>
-              <option value="P3">Artigo P3</option>
-              <option value="P4">Artigo P4</option>
-            </select>
+            <div className="flex items-center text-xs bg-white border border-slate-300 rounded-lg px-2 py-0.5 shadow-xs">
+              <span className="text-slate-400 mr-1 font-medium">Artigo:</span>
+              <select
+                value={selectedArticle}
+                onChange={(e) => {
+                  setSelectedArticle(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="bg-transparent focus:outline-none text-slate-700 font-medium cursor-pointer text-xs py-0.5"
+              >
+                <option value="ALL">Todos</option>
+                <option value="P1">P1</option>
+                <option value="P2">P2</option>
+                <option value="P3">P3</option>
+                <option value="P4">P4</option>
+              </select>
+            </div>
 
-            {/* Status */}
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-700 font-medium focus:ring-2 focus:ring-emerald-500 shadow-xs"
-            >
-              <option value="ALL">Todos os Status</option>
-              <option value="both">Presente em Ambos ({totalBoth})</option>
-              <option value="manual_only">Apenas no Manual</option>
-              <option value="ia_only">Apenas na IA</option>
-            </select>
+            {/* Status de Presença */}
+            <div className="flex items-center text-xs bg-white border border-slate-300 rounded-lg px-2 py-0.5 shadow-xs">
+              <span className="text-slate-400 mr-1 font-medium">Presença:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="bg-transparent focus:outline-none text-slate-700 font-medium cursor-pointer text-xs py-0.5"
+              >
+                <option value="ALL">Todos os sORFs</option>
+                <option value="both">Presente em Ambos ({totalBoth})</option>
+                <option value="manual_only">Apenas no Manual</option>
+                <option value="ia_only">Apenas na IA</option>
+              </select>
+            </div>
 
           </div>
 
         </div>
 
-        {/* Status de Alinhamento */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-200/60">
-          <div className="flex items-center gap-4">
-            <span>Alinhamento por <strong>chave composta</strong> (Chr + Start + End + Strand):</span>
-            <span className="font-semibold text-slate-800">{filteredRows.length} pares alinhados</span>
-            <span className="text-emerald-700 font-medium flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> {alignedRows.length - totalDivergent} idênticos
-            </span>
-            <span className="text-red-700 font-medium flex items-center gap-1">
-              <AlertTriangle className="w-3.5 h-3.5" /> {totalDivergent} divergentes
-            </span>
+        {/* Resumo da consulta */}
+        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+          <div className="flex items-center gap-2">
+            <span>Exibindo:</span>
+            <span className="font-semibold text-slate-800">{filteredRows.length}</span> pares de anotação
+            {filteredRows.length !== alignedRows.length && (
+              <span className="text-slate-400 font-normal">(filtrados de {alignedRows.length})</span>
+            )}
           </div>
           <div>
             Página <span className="font-semibold text-slate-800">{currentPage}</span> de <span className="font-semibold text-slate-800">{totalPages}</span>
@@ -171,200 +204,214 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
       </div>
 
-      {/* Visão Dividida: Manual (Esquerda) vs IA (Direita) com Rolagem Sincronizada (Prompt 5) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 min-h-[550px] bg-slate-50">
+      {/* Visão Dividida Lado a Lado (Prompt 5) */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 overflow-hidden">
         
-        {/* Painel Esquerdo: Braço MANUAL (Azul) */}
-        <div className="flex flex-col overflow-hidden bg-white">
-          <div className="bg-blue-600 text-white px-4 py-2 flex items-center justify-between text-xs font-bold uppercase tracking-wider sticky top-0 z-10">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-white" />
-              <span>Braço Manual (Referência)</span>
-            </div>
-            <span className="text-[10px] bg-blue-800/80 px-2 py-0.5 rounded font-mono">
-              manual.csv
+        {/* Painel Esquerdo: Anotação Manual (Azul) */}
+        <div className="flex flex-col min-h-0 overflow-hidden">
+          <div className="bg-blue-600/10 px-3 py-1.5 border-b border-blue-200 flex items-center justify-between shrink-0">
+            <span className="text-xs font-bold text-blue-800 flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
+              Manual (Referência Humana)
             </span>
+            <span className="text-[11px] text-blue-700 font-mono">Rolagem Sincronizada</span>
           </div>
 
           <div
             ref={manualTableRef}
             onScroll={() => syncScroll('manual')}
-            className="overflow-x-auto overflow-y-auto max-h-[620px]"
+            className="flex-1 min-h-0 overflow-auto"
           >
             <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-blue-50/70 text-slate-700 border-b border-blue-200 uppercase tracking-wider text-[11px] font-semibold sticky top-0 bg-white z-10">
-                  <th className="py-2.5 px-3">Status</th>
-                  <th className="py-2.5 px-3">Chave</th>
+              <thead className="sticky top-0 z-10 bg-slate-100/95 text-slate-700 border-b border-slate-200 uppercase tracking-wider font-semibold select-none backdrop-blur-xs shadow-xs">
+                <tr>
+                  <th className="py-2 px-2.5 w-8 text-center text-slate-400">#</th>
+                  <th className="py-2 px-2.5 whitespace-nowrap">Status</th>
                   {compareColumns.map((col) => (
-                    <th key={col} className="py-2.5 px-3 whitespace-nowrap">{col}</th>
+                    <th key={col} className="py-2 px-2.5 whitespace-nowrap">{col}</th>
                   ))}
-                  <th className="py-2.5 px-3 text-center">Ação</th>
+                  <th className="py-2 px-2.5 text-center">Ação</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
-                {paginatedRows.map((row) => {
-                  const m = row.manualRecord;
-                  if (!m) {
+              <tbody className="divide-y divide-slate-100">
+                {paginatedRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={compareColumns.length + 3} className="py-12 text-center text-slate-400">
+                      Nenhum registro encontrado.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedRows.map((row, idx) => {
+                    const rowNum = (currentPage - 1) * pageSize + idx + 1;
+                    const rec = row.manualRecord;
+                    const isMissing = !rec;
+
                     return (
-                      <tr key={row.chave} className="bg-slate-100/60 text-slate-400 italic">
-                        <td className="py-2 px-3 whitespace-nowrap font-sans font-semibold text-orange-700">
-                          <span className="px-2 py-0.5 rounded bg-orange-100 text-[10px]">Ausente</span>
+                      <tr
+                        key={row.chave || idx}
+                        onClick={() => onSelectComparison(row)}
+                        className={`cursor-pointer transition-colors ${
+                          isMissing
+                            ? 'bg-slate-100/50 text-slate-400 italic'
+                            : 'hover:bg-blue-50/50 text-slate-800'
+                        }`}
+                      >
+                        <td className="py-1.5 px-2.5 text-center text-slate-400 text-[10px] font-mono">
+                          {rowNum}
                         </td>
-                        <td className="py-2 px-3 whitespace-nowrap">{row.chave}</td>
-                        <td colSpan={compareColumns.length + 1} className="py-2 px-3 font-sans text-center text-slate-400">
-                          (sORF extraído apenas pelo braço IA)
+                        <td className="py-1.5 px-2.5 whitespace-nowrap">
+                          {isMissing ? (
+                            <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 text-[10px] font-medium">
+                              Ausente
+                            </span>
+                          ) : row.hasDivergence ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-semibold">
+                              <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                              Diff ({row.divergentFields.length})
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-medium">
+                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                              Idêntico
+                            </span>
+                          )}
+                        </td>
+                        {compareColumns.map((col) => {
+                          const val = rec ? rec[col] : '—';
+                          const isDiff = row.divergentFields.includes(col);
+                          return (
+                            <td
+                              key={col}
+                              className={`py-1.5 px-2.5 whitespace-nowrap max-w-xs truncate ${
+                                isDiff ? 'bg-amber-100/70 text-amber-950 font-semibold' : ''
+                              }`}
+                              title={String(val ?? '')}
+                            >
+                              {val ?? 'NA'}
+                            </td>
+                          );
+                        })}
+                        <td className="py-1.5 px-2.5 text-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectComparison(row);
+                            }}
+                            className="p-1 rounded text-blue-600 hover:bg-blue-100 transition"
+                            title="Ver detalhes comparativos"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
                         </td>
                       </tr>
                     );
-                  }
-
-                  return (
-                    <tr
-                      key={row.chave}
-                      onClick={() => onSelectComparison(row)}
-                      className="hover:bg-blue-50/40 cursor-pointer transition-colors"
-                    >
-                      <td className="py-2 px-3 whitespace-nowrap font-sans">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                          row.status === 'both' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {row.status === 'both' ? 'Ambos' : 'Só Manual'}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 whitespace-nowrap font-medium text-slate-800" title={row.chave}>
-                        {row.chave.length > 25 ? `${row.chave.substring(0, 22)}...` : row.chave}
-                      </td>
-                      {compareColumns.map((col) => {
-                        const isDiff = row.divergentFields.includes(col);
-                        const val = m[col];
-                        const isNa = val === undefined || val === null || val === '' || String(val).toUpperCase() === 'NA';
-                        return (
-                          <td
-                            key={col}
-                            className={`py-2 px-3 whitespace-nowrap ${
-                              isDiff
-                                ? 'bg-red-100/80 text-red-950 font-bold border-l-2 border-red-500'
-                                : 'text-slate-700'
-                            }`}
-                          >
-                            {isNa ? <span className="text-slate-400 italic font-sans text-[10px]">NA</span> : String(val)}
-                          </td>
-                        );
-                      })}
-                      <td className="py-2 px-3 text-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectComparison(row);
-                          }}
-                          className="p-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
-                          title="Inspecionar pareamento completo"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                  })
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Painel Direito: Braço IA (Laranja) */}
-        <div className="flex flex-col overflow-hidden bg-white">
-          <div className="bg-orange-600 text-white px-4 py-2 flex items-center justify-between text-xs font-bold uppercase tracking-wider sticky top-0 z-10">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-white" />
-              <span>Braço IA (Extração Automatizada)</span>
-            </div>
-            <span className="text-[10px] bg-orange-800/80 px-2 py-0.5 rounded font-mono">
-              ia.csv
+        {/* Painel Direito: Anotação IA (Laranja) */}
+        <div className="flex flex-col min-h-0 overflow-hidden">
+          <div className="bg-orange-600/10 px-3 py-1.5 border-b border-orange-200 flex items-center justify-between shrink-0">
+            <span className="text-xs font-bold text-orange-800 flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-600 inline-block" />
+              IA (Extração Automática)
             </span>
+            <span className="text-[11px] text-orange-700 font-mono">Destaque de Divergências</span>
           </div>
 
           <div
             ref={iaTableRef}
             onScroll={() => syncScroll('ia')}
-            className="overflow-x-auto overflow-y-auto max-h-[620px]"
+            className="flex-1 min-h-0 overflow-auto"
           >
             <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-orange-50/70 text-slate-700 border-b border-orange-200 uppercase tracking-wider text-[11px] font-semibold sticky top-0 bg-white z-10">
-                  <th className="py-2.5 px-3">Status</th>
-                  <th className="py-2.5 px-3">Chave</th>
+              <thead className="sticky top-0 z-10 bg-slate-100/95 text-slate-700 border-b border-slate-200 uppercase tracking-wider font-semibold select-none backdrop-blur-xs shadow-xs">
+                <tr>
+                  <th className="py-2 px-2.5 w-8 text-center text-slate-400">#</th>
+                  <th className="py-2 px-2.5 whitespace-nowrap">Status</th>
                   {compareColumns.map((col) => (
-                    <th key={col} className="py-2.5 px-3 whitespace-nowrap">{col}</th>
+                    <th key={col} className="py-2 px-2.5 whitespace-nowrap">{col}</th>
                   ))}
-                  <th className="py-2.5 px-3 text-center">Ação</th>
+                  <th className="py-2 px-2.5 text-center">Ação</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
-                {paginatedRows.map((row) => {
-                  const ia = row.iaRecord;
-                  if (!ia) {
+              <tbody className="divide-y divide-slate-100">
+                {paginatedRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={compareColumns.length + 3} className="py-12 text-center text-slate-400">
+                      Nenhum registro encontrado.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedRows.map((row, idx) => {
+                    const rowNum = (currentPage - 1) * pageSize + idx + 1;
+                    const rec = row.iaRecord;
+                    const isMissing = !rec;
+
                     return (
-                      <tr key={row.chave} className="bg-slate-100/60 text-slate-400 italic">
-                        <td className="py-2 px-3 whitespace-nowrap font-sans font-semibold text-blue-700">
-                          <span className="px-2 py-0.5 rounded bg-blue-100 text-[10px]">Ausente</span>
+                      <tr
+                        key={row.chave || idx}
+                        onClick={() => onSelectComparison(row)}
+                        className={`cursor-pointer transition-colors ${
+                          isMissing
+                            ? 'bg-slate-100/50 text-slate-400 italic'
+                            : 'hover:bg-orange-50/50 text-slate-800'
+                        }`}
+                      >
+                        <td className="py-1.5 px-2.5 text-center text-slate-400 text-[10px] font-mono">
+                          {rowNum}
                         </td>
-                        <td className="py-2 px-3 whitespace-nowrap">{row.chave}</td>
-                        <td colSpan={compareColumns.length + 1} className="py-2 px-3 font-sans text-center text-slate-400">
-                          (sORF anotado apenas no braço Manual)
+                        <td className="py-1.5 px-2.5 whitespace-nowrap">
+                          {isMissing ? (
+                            <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 text-[10px] font-medium">
+                              Ausente
+                            </span>
+                          ) : row.hasDivergence ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-semibold">
+                              <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                              Diff ({row.divergentFields.length})
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-medium">
+                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                              Idêntico
+                            </span>
+                          )}
+                        </td>
+                        {compareColumns.map((col) => {
+                          const val = rec ? rec[col] : '—';
+                          const isDiff = row.divergentFields.includes(col);
+                          return (
+                            <td
+                              key={col}
+                              className={`py-1.5 px-2.5 whitespace-nowrap max-w-xs truncate ${
+                                isDiff ? 'bg-amber-100/70 text-amber-950 font-semibold' : ''
+                              }`}
+                              title={String(val ?? '')}
+                            >
+                              {val ?? 'NA'}
+                            </td>
+                          );
+                        })}
+                        <td className="py-1.5 px-2.5 text-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectComparison(row);
+                            }}
+                            className="p-1 rounded text-orange-600 hover:bg-orange-100 transition"
+                            title="Ver detalhes comparativos"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
                         </td>
                       </tr>
                     );
-                  }
-
-                  return (
-                    <tr
-                      key={row.chave}
-                      onClick={() => onSelectComparison(row)}
-                      className="hover:bg-orange-50/40 cursor-pointer transition-colors"
-                    >
-                      <td className="py-2 px-3 whitespace-nowrap font-sans">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                          row.status === 'both' ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {row.status === 'both' ? 'Ambos' : 'Só IA'}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 whitespace-nowrap font-medium text-slate-800" title={row.chave}>
-                        {row.chave.length > 25 ? `${row.chave.substring(0, 22)}...` : row.chave}
-                      </td>
-                      {compareColumns.map((col) => {
-                        const isDiff = row.divergentFields.includes(col);
-                        const val = ia[col];
-                        const isNa = val === undefined || val === null || val === '' || String(val).toUpperCase() === 'NA';
-                        return (
-                          <td
-                            key={col}
-                            className={`py-2 px-3 whitespace-nowrap ${
-                              isDiff
-                                ? 'bg-red-100/80 text-red-950 font-bold border-l-2 border-red-500'
-                                : 'text-slate-700'
-                            }`}
-                          >
-                            {isNa ? <span className="text-slate-400 italic font-sans text-[10px]">NA</span> : String(val)}
-                          </td>
-                        );
-                      })}
-                      <td className="py-2 px-3 text-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectComparison(row);
-                          }}
-                          className="p-1 rounded bg-orange-50 text-orange-700 hover:bg-orange-100 transition"
-                          title="Inspecionar pareamento completo"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -372,29 +419,47 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
       </div>
 
-      {/* Paginação */}
-      <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
-        <div className="text-slate-500">
-          Mostrando {(currentPage - 1) * pageSize + 1} a{' '}
-          {Math.min(currentPage * pageSize, filteredRows.length)} de {filteredRows.length} pares alinhados
+      {/* Paginação Compacta */}
+      <div className="px-3 py-1.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs shrink-0">
+        <div className="flex items-center gap-3 text-slate-500 text-[11px]">
+          <span>
+            Mostrando {(currentPage - 1) * pageSize + 1} a{' '}
+            {Math.min(currentPage * pageSize, filteredRows.length)} de {filteredRows.length} pares
+          </span>
+          <div className="flex items-center gap-1">
+            <span>Por página:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="bg-white border border-slate-300 rounded px-1.5 py-0.5 text-xs text-slate-700 focus:outline-none"
+            >
+              <option value={15}>15</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="p-1.5 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="p-1 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
-            <ChevronLeft className="w-4 h-4 text-slate-600" />
+            <ChevronLeft className="w-3.5 h-3.5 text-slate-600" />
           </button>
-          <span className="px-3 py-1 font-semibold text-slate-700 bg-white border border-slate-300 rounded">
+          <span className="px-2.5 py-0.5 font-semibold text-slate-700 bg-white border border-slate-300 rounded text-xs">
             {currentPage} / {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="p-1.5 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="p-1 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
-            <ChevronRight className="w-4 h-4 text-slate-600" />
+            <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
           </button>
         </div>
       </div>

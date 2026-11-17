@@ -11,7 +11,7 @@ import { AboutPage } from './components/AboutPage';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function App() {
-  // Estado da Fonte selecionada (Prompt 2: ?fonte=manual|ia|comparar)
+  // Estado da Fonte selecionada (?fonte=manual|ia|comparar)
   const [source, setSource] = useState<SourceType>(() => {
     const params = new URLSearchParams(window.location.search);
     const f = params.get('fonte')?.toLowerCase();
@@ -20,7 +20,7 @@ export default function App() {
   });
 
   // Aba ativa (Tabela/Diff, Resumo, Sobre)
-  const [activeTab, setActiveTab] = useState<'table' | 'summary' | 'about'>('summary'); // Abre no Resumo conforme Prompt 7
+  const [activeTab, setActiveTab] = useState<'table' | 'summary' | 'about'>('table');
 
   // Dados carregados dos CSVs
   const [manualData, setManualData] = useState<SorfRecord[]>([]);
@@ -35,7 +35,7 @@ export default function App() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailComparisonStatus, setDetailComparisonStatus] = useState<'both' | 'manual_only' | 'ia_only'>('both');
 
-  // Colunas padrão especificadas no Prompt 3
+  // Colunas padrão
   const defaultColumns = useMemo(() => [
     'artigo',
     'original_orf_id',
@@ -126,7 +126,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
+    <div className="h-screen max-h-screen flex flex-col bg-slate-100 font-sans overflow-hidden">
       
       {/* Header com Interruptor Manual | IA | Comparar */}
       <Header
@@ -138,33 +138,34 @@ export default function App() {
         iaCount={iaData.length}
       />
 
-      {/* Conteúdo Principal */}
-      <main className="flex-1 max-w-[1920px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Conteúdo Principal que ocupa 100% da altura restante sem barra de rolagem externa */}
+      <main className="flex-1 min-h-0 w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 py-2 overflow-hidden flex flex-col">
         
         {/* Estado de Carregamento */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center py-24 text-slate-500">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mb-3" />
-            <span className="text-sm font-medium">Carregando dados biológicos (PapaParse)...</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mb-2" />
+            <span className="text-xs font-medium">Carregando dados biológicos (PapaParse)...</span>
           </div>
         )}
 
         {/* Estado de Erro */}
         {!isLoading && errorMsg && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl flex items-center gap-3 text-sm">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl flex items-center gap-3 text-xs shrink-0">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {/* Telas Principais */}
         {!isLoading && !errorMsg && (
-          <>
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            
             {/* Aba 1: Tabela de Dados e Modo Comparar */}
             {activeTab === 'table' && (
-              <div>
+              <div className="h-full min-h-0 flex flex-col overflow-hidden">
                 {source === 'manual' && (
-                  <div className="border-t-4 border-blue-600 rounded-xl overflow-hidden shadow-xs">
+                  <div className="h-full min-h-0 border-t-4 border-blue-600 rounded-xl overflow-hidden shadow-xs flex flex-col">
                     <DataTable
                       data={manualData}
                       sourceName="Manual (Referência)"
@@ -177,7 +178,7 @@ export default function App() {
                 )}
 
                 {source === 'ia' && (
-                  <div className="border-t-4 border-orange-600 rounded-xl overflow-hidden shadow-xs">
+                  <div className="h-full min-h-0 border-t-4 border-orange-600 rounded-xl overflow-hidden shadow-xs flex flex-col">
                     <DataTable
                       data={iaData}
                       sourceName="Inteligência Artificial (Extração Automática)"
@@ -190,7 +191,7 @@ export default function App() {
                 )}
 
                 {source === 'comparar' && (
-                  <div className="border-t-4 border-emerald-600 rounded-xl overflow-hidden shadow-xs">
+                  <div className="h-full min-h-0 border-t-4 border-emerald-600 rounded-xl overflow-hidden shadow-xs flex flex-col">
                     <CompareView
                       alignedRows={alignedRows}
                       allColumns={allColumns}
@@ -202,26 +203,33 @@ export default function App() {
               </div>
             )}
 
-            {/* Aba 2: Painel de Resumo (Prompt 6) */}
+            {/* Aba 2: Painel de Resumo */}
             {activeTab === 'summary' && (
-              <SummaryDashboard
-                manualData={manualData}
-                iaData={iaData}
-                alignedRows={alignedRows}
-                fieldAgreements={fieldAgreements}
-                articleAgreements={articleAgreements}
-                metrics={metrics}
-              />
+              <div className="h-full min-h-0 overflow-y-auto pr-1">
+                <SummaryDashboard
+                  manualData={manualData}
+                  iaData={iaData}
+                  alignedRows={alignedRows}
+                  fieldAgreements={fieldAgreements}
+                  articleAgreements={articleAgreements}
+                  metrics={metrics}
+                />
+              </div>
             )}
 
-            {/* Aba 3: Página Sobre (Prompt 7) */}
-            {activeTab === 'about' && <AboutPage />}
-          </>
+            {/* Aba 3: Página Sobre */}
+            {activeTab === 'about' && (
+              <div className="h-full min-h-0 overflow-y-auto pr-1">
+                <AboutPage />
+              </div>
+            )}
+
+          </div>
         )}
 
       </main>
 
-      {/* Modal de Detalhe Completo do sORF (Prompt 4) */}
+      {/* Modal de Detalhe Completo do sORF */}
       <DetailModal
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}

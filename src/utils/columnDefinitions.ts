@@ -93,6 +93,12 @@ export const COLUMN_DEFINITIONS: Record<string, ColumnDefinition> = {
   },
 
   // Comprimentos e Sequências
+  original_sequence: {
+    title: 'Sequência Original',
+    category: 'Proteômica & Tradução',
+    description: 'Sequência primária original de aminoácidos ou nucleotídios correspondente ao sORF conforme reportada no artigo original.',
+    example: 'MENKRLKDVQIMLSQQVKDLEDGRRLLTERMKKAEQETFKIIEENMKLKDENKGS',
+  },
   aa_orf_length: {
     title: 'Comprimento do Peptídeo (AA)',
     category: 'Proteômica & Tradução',

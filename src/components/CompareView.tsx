@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useDeferredValue } from 'react';
 import { AlignedComparisonRow } from '../types/sorf';
 import { Search, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { ColumnHeaderWithTooltip } from './ColumnHeaderWithTooltip';
@@ -17,6 +17,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
 }) => {
   const [onlyDifferences, setOnlyDifferences] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [selectedArticle, setSelectedArticle] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
   // Filtros
   const filteredRows = useMemo(() => {
-    const rawQuery = searchTerm.trim().toLowerCase();
+    const rawQuery = deferredSearchTerm.trim().toLowerCase();
     const cleanQuery = rawQuery.replace(/[-_.\s]/g, '');
 
     return alignedRows.filter((row) => {
@@ -83,7 +84,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
       }
       return true;
     });
-  }, [alignedRows, onlyDifferences, selectedArticle, statusFilter, searchTerm]);
+  }, [alignedRows, onlyDifferences, selectedArticle, statusFilter, deferredSearchTerm]);
 
   // Paginação
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));

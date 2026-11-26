@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import { SorfRecord } from '../types/sorf';
 import {
   Search,
@@ -38,6 +38,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [selectedArticle, setSelectedArticle] = useState<string>('ALL');
   const [selectedType, setSelectedType] = useState<string>('ALL');
   const [selectedEvidence, setSelectedEvidence] = useState<string>('ALL');
@@ -82,7 +83,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 
   // Busca abrangente e normalizada em todos os campos da linha
   const filteredData = useMemo(() => {
-    const rawQuery = searchTerm.trim().toLowerCase();
+    const rawQuery = deferredSearchTerm.trim().toLowerCase();
     const cleanQuery = rawQuery.replace(/[-_.\s]/g, '');
 
     return data.filter((row) => {
@@ -117,7 +118,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 
       return true;
     });
-  }, [data, selectedArticle, selectedType, selectedEvidence, searchTerm]);
+  }, [data, selectedArticle, selectedType, selectedEvidence, deferredSearchTerm]);
 
   // Ordenação
   const sortedData = useMemo(() => {

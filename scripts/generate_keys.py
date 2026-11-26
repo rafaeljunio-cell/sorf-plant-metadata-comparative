@@ -4,16 +4,17 @@ generate_keys.py
 ================
 Script utilitário para pré-processamento dos dados de sORFs (Manual vs IA).
 Lê planilhas Excel (.xlsx) ou CSVs contendo as 55 colunas da tabela_completa,
+detecta ou preenche o código do artigo (a partir de 'source' ou parâmetro),
 gera a coluna 'chave' composta canônica e exporta os arquivos padronizados
 em UTF-8 para o diretório public/data/.
 
-Regra da chave:
+Regra da chave canônica:
 - Prioridade 1: artigo + "_" + Chr + "_" + Start + "_" + End + "_" + Strand
 - Prioridade 2 (sem coordenadas): artigo + "_" + original_orf_id
 - Prioridade 3: artigo + "_" + orf_id
 
 Uso:
-    python scripts/generate_keys.py --input-manual manual_bruto.xlsx --input-ia ia_bruto.xlsx --output-dir public/data/
+    python scripts/generate_keys.py --input-manual manual_bruto.xlsx --input-ia search_results.xlsx --output-dir public/data/
 """
 
 import os
@@ -25,7 +26,7 @@ def normalize_text(val):
     if pd.isna(val):
         return ""
     s = str(val).strip()
-    if s.upper() in ["NA", "N/A", "NULL", "NONE"]:
+    if s.upper() in ["NA", "N/A", "NULL", "NONE", "NAN"]:
         return "NA"
     return s
 
@@ -36,18 +37,36 @@ def build_chave(row):
     end_val = str(row.get('End', '')).strip()
     strand_val = str(row.get('Strand', '')).strip()
 
-    if chr_val and start_val and end_val and strand_val and chr_val != 'NA' and start_val != 'NA':
+    if (chr_val and start_val and end_val and strand_val 
+            and chr_val.upper() not in ['NA', 'NAN', ''] 
+            and start_val.upper() not in ['NA', 'NAN', '']):
         return f"{artigo}_{chr_val}_{start_val}_{end_val}_{strand_val}"
     
     orig_id = str(row.get('original_orf_id', '')).strip()
-    if orig_id and orig_id != 'NA':
+    if orig_id and orig_id.upper() not in ['NA', 'NAN', '']:
         return f"{artigo}_{orig_id}"
     
     orf_id = str(row.get('orf_id', '')).strip()
-    if orf_id and orf_id != 'NA':
+    if orf_id and orf_id.upper() not in ['NA', 'NAN', '']:
         return f"{artigo}_{orf_id}"
 
     return f"{artigo}_row_{row.name}"
+
+def format_integer_cols(df):
+    for col in ['Start', 'End', 'aa_orf_length', 'nt_transcript_length']:
+        if col in df.columns:
+            def _fmt(val):
+                if pd.isna(val) or val == '' or str(val).upper() in ['NA', 'NAN', 'NULL']:
+                    return 'NA'
+                try:
+                    f = float(val)
+                    if f.is_integer():
+                        return str(int(f))
+                    return str(f)
+                except Exception:
+                    return str(val).strip()
+            df[col] = df[col].apply(_fmt)
+    return df
 
 def process_file(filepath, output_csv, default_artigo="P1"):
     print(f"[*] Processando: {filepath}")
@@ -57,8 +76,15 @@ def process_file(filepath, output_csv, default_artigo="P1"):
         df = pd.read_csv(filepath)
 
     if 'artigo' not in df.columns:
-        print(f"    [!] Coluna 'artigo' não encontrada. Preenchendo com padrão '{default_artigo}'")
-        df['artigo'] = default_artigo
+        if 'source' in df.columns:
+            print("    [*] Coluna 'artigo' ausente; preenchendo a partir da coluna 'source' (P1 a P4).")
+            df['artigo'] = df['source'].astype(str).str.strip()
+        else:
+            print(f"    [!] Coluna 'artigo' não encontrada. Preenchendo com padrão '{default_artigo}'")
+            df['artigo'] = default_artigo
+
+    # Formatar colunas inteiras
+    df = format_integer_cols(df)
 
     # Gerar ou atualizar a coluna chave
     df['chave'] = df.apply(build_chave, axis=1)
@@ -88,7 +114,7 @@ def main():
 
     if not args.input_manual and not args.input_ia:
         print("Nenhum arquivo especificado. Exemplo de uso:")
-        print("  python scripts/generate_keys.py --input-manual dados_manual.xlsx --input-ia dados_ia.xlsx")
+        print("  python scripts/generate_keys.py --input-manual dados_manual.xlsx --input-ia search_results.xlsx")
 
 if __name__ == "__main__":
     main()
